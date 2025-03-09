@@ -1,0 +1,888 @@
+<body>
+    <div id="loginContainer" class="login-container">
+        <h2>登录</h2>
+        <input type="text" id="username" placeholder="账号">
+        <input type="password" id="password" placeholder="密码">
+        <button onclick="handleLogin()">登录</button>
+        <p id="loginError" style="color: red; display: none;">账号或密码错误</p>
+    </div>
+
+    <div id="contentContainer" style="display: none;">
+        <!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情欲之路TikTok</title>
+    
+     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: black; color: white; font-family: Arial, sans-serif; overflow: hidden; }
+ .video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+    overflow: hidden; /* ✅ 防止视频超出屏幕 */
+}
+
+video {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain; /* ✅ 让视频完整显示，而不会被裁剪 */
+}
+
+
+        .bottom-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 10px 0; background: rgba(0, 0, 0, 0.5); }
+        .bottom-bar button { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
+        .menu { position: fixed; top: 10px; right: 10px; cursor: pointer; }
+        .menu div { width: 30px; height: 4px; background: white; margin: 5px 0; }
+        .nav { display: none; position: fixed; top: 0; right: 0; width: 200px; height: 100vh; background: rgba(0, 0, 0, 0.8); padding: 20px; }
+        .nav a { display: block; color: white; text-decoration: none; margin: 10px 0; }
+        .video-info { position: absolute; bottom: 70px; left: 10px; }
+        .video-info p { margin: 5px 0; }
+        
+.nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.nav.active {
+    display: block;
+}
+
+
+
+  #searchContainer {
+    position: fixed;
+    top: 35%; /* 向上调整弹出搜索框位置 */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 25px;
+    border-radius: 15px;
+    display: none;
+  }
+
+  /* 增大搜索按钮尺寸并添加渐变 */
+  #searchButton {
+    width: 60px;
+    height: 30px;
+    font-size: 15px;
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  #searchButton:hover {
+    background: linear-gradient(45deg, #ff4b2b, #ff416c);
+  }
+
+ @media (max-width: 768px) {
+    video {
+        height: 100vh;
+        width: auto; /* 让视频在移动端保持原比例 */
+    }
+}
+
+.hidden #progressBar {
+    opacity: 0;
+    visibility: hidden;
+}
+
+        
+#progressBar {
+    position: absolute;
+    bottom: 100%; /* 让进度条紧贴 `bottomBar` 上方 */
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+#progressBar::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    background: red;
+    border-radius: 50%;
+    cursor: pointer;
+    appearance: none;
+}
+        
+#bottomBar, #menu, #progressBar {
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    opacity: 1;
+    visibility: visible;
+}
+        
+.controls, .menu-icon, .progress-bar {
+    transition: opacity 0.5s ease-in-out; /* 平滑过渡 */
+}
+
+        
+.hidden {
+    display: none !important;
+}
+
+/* 📌 右侧标签菜单 UI */
+.tag-menu {
+    position: fixed;
+    top: 0;
+    right: -35%; /* 初始隐藏 */
+    width: 30%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 20px;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.tag-option {
+    display: block;
+    padding: 10px;
+    margin: 5px 0;
+    background: #333;
+    cursor: pointer;
+    text-align: center;
+}
+
+.tag-option:hover {
+    background: #555;
+}
+
+/* 选中标签显示 */
+#selectedTagDisplay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    display: none;
+}
+
+/* 登录 */
+.login-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-container input {
+    width: 200px;
+    padding: 10px;
+    margin: 5px 0;
+    border: none;
+    border-radius: 5px;
+}
+
+.login-container button {
+    padding: 10px;
+    background: #ff4b2b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#logoutBtn {
+    position: fixed;
+    top: 10px;
+    left: 10px;  /* ✅ 调整到左上角 */
+    padding: 8px 12px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 9999; /* ✅ 确保按钮始终在最上层 */
+}
+
+#logoutBtn:hover {
+    background: darkred;
+}
+
+/* 登录结束 */
+        
+    </style>
+</head>
+<body>
+
+<div class="video-container">
+    <video id="video" autoplay loop muted playsinline></video>
+</div>
+<div id="selectedTagDisplay" style="position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.7); color: white; padding: 5px 10px; display: none;">
+</div>
+
+
+<div class="video-info">
+    <p id="videoTitle">视频标题</p>
+    <p id="videoTime">发布时间</p>
+    <p id="videoCategory">分类</p>
+</div>
+
+
+<div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="搜索用户名或标签">
+    <button id="searchButton">搜索</button>
+</div>
+
+
+   <script>
+let videos = [];
+let filteredVideos = []; // 存储搜索结果
+let selectedTag = "全部"; // 默认选中“全部”
+
+async function loadVideos() {
+    try {
+        const response = await fetch("videos/videos.json"); // 确保路径正确
+        if (!response.ok) throw new Error("❌ 服务器返回错误: " + response.status);
+        
+        videos = await response.json();
+        filteredVideos = [...videos]; // ✅ 默认加载所有视频
+        generateTagMenu();
+        playRandomVideo(); // ✅ 确保有视频可播放
+    } catch (error) {
+        console.error("❌ 加载视频数据失败:", error);
+    }
+}
+
+
+// 页面加载时执行
+document.addEventListener("DOMContentLoaded", loadVideos);
+
+
+function playRandomVideo() {
+    if (filteredVideos.length === 0) {
+        console.warn("⚠️ 没有匹配的视频，播放所有视频！");
+        filteredVideos = [...videos]; // ✅ 防止 `filteredVideos` 为空
+    }
+
+    let randomIndex = Math.floor(Math.random() * filteredVideos.length);
+    let data = filteredVideos[randomIndex];
+    let videoElement = document.getElementById("video");
+    let videoUrl = data.vod_play_url;
+
+    console.log("🎥 正在播放视频：", videoUrl);
+
+    if (videoElement.hlsInstance) {
+        videoElement.hlsInstance.destroy();
+        videoElement.hlsInstance = null;
+    }
+
+    if (videoUrl.endsWith(".m3u8")) {
+        if (Hls.isSupported()) {
+            let hls = new Hls();
+            hls.loadSource(videoUrl);
+            hls.attachMedia(videoElement);
+            videoElement.hlsInstance = hls;
+
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                videoElement.currentTime = 20; // ⏩ 自动跳过前 20 秒
+                videoElement.play();
+            });
+
+        } else if (videoElement.canPlayType("application/vnd.apple.mpegurl")) {
+            videoElement.src = videoUrl;
+            videoElement.currentTime = 20; // ⏩ 自动跳过前 20 秒
+            videoElement.play();
+        } else {
+            console.error("❌ 你的浏览器不支持 M3U8 播放！");
+            return;
+        }
+    } else {
+        videoElement.src = videoUrl;
+        videoElement.currentTime = 20; // ⏩ 自动跳过前 20 秒
+        videoElement.play();
+    }
+
+    document.getElementById("videoTitle").innerText = data.vod_name;
+    document.getElementById("videoTime").innerText = data.vod_time;
+    document.getElementById("videoCategory").innerText = data.type_name;
+}
+
+
+
+
+
+
+function searchVideos() {
+    let query = document.getElementById("searchInput").value.trim().toLowerCase();
+    if (query === "") {
+        filteredVideos = [...videos]; // 显示所有视频
+    } else {
+        filteredVideos = videos.filter(video =>
+            video.username.toLowerCase().includes(query) ||
+            video.tags.some(tag => tag.toLowerCase().includes(query))
+        );
+    }
+    playRandomVideo(); // 重新播放搜索后的结果
+}
+
+// 主页按钮点击事件
+function goHome() {
+    window.location.href = "index.html"; // 返回首页
+}
+
+// 右上角菜单切换
+function toggleMenu(event) {
+    event.stopPropagation(); // ✅ 防止事件冒泡，避免误关闭菜单
+    let nav = document.getElementById("nav");
+    let menu = document.getElementById("menu");
+
+    // ✅ 切换菜单状态
+    nav.classList.toggle("active");
+
+    // ✅ 如果菜单是展开的，添加监听器
+    if (nav.classList.contains("active")) {
+        document.addEventListener("click", closeMenu);
+    } else {
+        document.removeEventListener("click", closeMenu);
+    }
+}
+
+// ✅ 点击外部区域关闭菜单
+function closeMenu(event) {
+    let nav = document.getElementById("nav");
+    let menu = document.getElementById("menu");
+
+    if (!nav.contains(event.target) && !menu.contains(event.target)) {
+        nav.classList.remove("active");
+        document.removeEventListener("click", closeMenu);
+    }
+}
+
+
+
+
+
+// PC 端鼠标滚轮事件
+document.addEventListener("wheel", (event) => {
+    if (event.deltaY > 10 || event.deltaY < -10) {
+        playRandomVideo();
+    }
+});
+
+// 触摸滑动事件（移动端优化）
+let touchStartY = 0;
+document.addEventListener("touchstart", (evt) => {
+    touchStartY = evt.touches[0].clientY;
+}, false);
+
+document.addEventListener("touchend", (evt) => {
+    let touchEndY = evt.changedTouches[0].clientY;
+    if (Math.abs(touchStartY - touchEndY) > 10) {
+        playRandomVideo();
+    }
+}, false);
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadVideos(); // ✅ 只调用一次 loadVideos()
+
+    const progressBar = document.getElementById("progressBar");
+    const video = document.getElementById("video");
+
+    // 监听视频播放进度，更新进度条
+    video.addEventListener("timeupdate", function () {
+        let progress = (video.currentTime / video.duration) * 100;
+        progressBar.value = progress;
+    });
+
+    // 监听进度条拖动，跳转到对应时间
+    progressBar.addEventListener("input", function () {
+        let seekTime = (progressBar.value / 100) * video.duration;
+        video.currentTime = seekTime;
+    });
+
+    // ✅ 修正搜索按钮的问题
+    const searchContainer = document.getElementById("searchContainer");
+    const searchInput = document.getElementById("searchInput");
+    const searchButton = document.getElementById("searchButton");
+    const searchIcon = document.getElementById("searchIcon"); // ✅ 这里定义，确保 HTML 加载完成后获取
+
+    if (!searchContainer || !searchInput || !searchButton || !searchIcon) {
+        console.error("❌ 搜索框或按钮未正确加载，请检查 HTML 结构");
+        return;
+    }
+
+    // 点击底部🔍按钮，显示搜索框
+    searchIcon.addEventListener("click", function () {
+        console.log("🔍 按钮被点击，尝试显示搜索框");
+        searchContainer.style.display = "block";
+        searchInput.focus();
+    });
+
+    // 监听 Enter 触发搜索
+    searchInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            searchVideos();
+            closeSearch();
+        }
+    });
+
+    // 点击搜索按钮触发搜索
+    searchButton.addEventListener("click", function () {
+        searchVideos();
+        closeSearch();
+    });
+
+    // 关闭搜索框
+    function closeSearch() {
+        searchContainer.style.display = "none";
+    }
+
+    // 点击搜索框外部关闭
+    document.addEventListener("click", function (event) {
+        if (!searchContainer.contains(event.target) && event.target !== searchIcon) {
+            closeSearch();
+        }
+    });
+});
+
+// ⏸️ 播放 / 暂停 视频
+function togglePlay() {
+    let video = document.getElementById("video");
+    if (video.paused) {
+        video.play();
+    } else {
+        video.pause();
+    }
+}
+
+// 🔊 静音 / 取消静音
+function toggleSound() {
+    let video = document.getElementById("video");
+    video.muted = !video.muted;
+}
+
+function toggleFullscreen() {
+    let video = document.getElementById("video");
+
+    if (!document.fullscreenElement) {
+        if (video.requestFullscreen) {
+            video.requestFullscreen();
+        } else if (video.webkitRequestFullscreen) { // iOS Safari
+            video.webkitRequestFullscreen();
+        } else if (video.mozRequestFullScreen) { // Firefox
+            video.mozRequestFullScreen();
+        } else if (video.msRequestFullscreen) { // IE/Edge
+            video.msRequestFullscreen();
+        }
+
+        // ✅ 让视频在全屏时 100% 适配屏幕
+        video.style.width = "100%";
+        video.style.height = "100%";
+        video.style.objectFit = "contain";
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+
+        // ✅ 退出全屏时恢复默认样式
+        video.style.width = "auto";
+        video.style.height = "auto";
+        video.style.objectFit = "contain";
+    }
+}
+
+
+
+let uiElements = document.querySelectorAll("#bottomBar, #menu, #progressBar");
+let isUIVisible = true; // 追踪 UI 状态
+
+// 显示 UI
+let hideUITimer;
+let lastInteractionTime = Date.now(); // 记录上次交互时间
+
+function hideUI() {
+    console.log("⏳ UI 正在隐藏...");
+    document.getElementById("bottomBar").classList.add("hidden");
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("progressBar").classList.add("hidden");
+}
+
+function showUI() {
+    console.log("👀 UI 重新显示...");
+    document.getElementById("bottomBar").classList.remove("hidden");
+    document.getElementById("menu").classList.remove("hidden");
+    document.getElementById("progressBar").classList.remove("hidden");
+    lastInteractionTime = Date.now(); // 更新交互时间
+}
+
+
+function checkAutoHide() {
+    if (Date.now() - lastInteractionTime > 3000) { // 3 秒无操作
+        hideUI();
+    }
+    requestAnimationFrame(checkAutoHide); // 持续检查
+}
+
+// 监听用户交互事件
+["mousemove", "touchstart", "click"].forEach(event => {
+    document.addEventListener(event, function () {
+        console.log("👆 用户交互，重置隐藏计时器");
+        showUI();
+    });
+});
+
+// 页面加载后启动 UI 监测
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("✅ 页面已加载，开始监听 UI 自动隐藏");
+    showUI();
+    requestAnimationFrame(checkAutoHide); // 启动隐藏检测
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const video = document.getElementById("video");
+
+    // ✅ 点击屏幕播放 / 暂停
+    video.addEventListener("click", function () {
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    });
+
+    console.log("🎥 已启用点击播放/暂停功能");
+});
+
+function toggleTagMenu(event) {
+    if (event) {
+        event.stopPropagation(); // 防止事件冒泡，避免误关闭菜单
+    }
+
+    let menu = document.getElementById("tagMenu");
+    if (!menu) {
+        console.error("❌ tagMenu 未找到，请检查 HTML 结构！");
+        return;
+    }
+
+    // 切换菜单状态
+    if (menu.style.right === "0px") {
+        menu.style.right = "-35%";
+        document.removeEventListener("click", closeTagMenu); // 取消监听关闭事件
+    } else {
+        menu.style.right = "0px";
+        document.addEventListener("click", closeTagMenu); // 监听点击外部关闭菜单
+    }
+}
+
+// 📌 监听点击空白处关闭标签菜单
+function closeTagMenu(event) {
+    let menu = document.getElementById("tagMenu");
+    if (!menu.contains(event.target)) { // 如果点击的不是菜单本身
+        menu.style.right = "-35%";
+        document.removeEventListener("click", closeTagMenu);
+    }
+}
+
+
+
+
+
+// 📌 加载标签列表
+function loadTags() {
+    let tagSet = new Set();
+    videos.forEach(video => video.tags.forEach(tag => tagSet.add(tag)));
+
+    let tagList = document.getElementById("tagList");
+    tagList.innerHTML = ""; // 清空旧数据
+
+    tagSet.forEach(tag => {
+        let div = document.createElement("div");
+        div.className = "tag-option";
+        div.innerText = tag;
+        div.onclick = () => filterVideos(tag);
+        tagList.appendChild(div);
+    });
+}
+
+function selectTag(tag) {
+    document.getElementById("selectedTag").innerText = tag; // ✅ 更新 UI 显示当前选中的标签
+    filterVideos(tag); // 传入选中的标签
+
+    // 📌 选择标签后，自动收起菜单
+    let menu = document.getElementById("tagMenu");
+    menu.style.right = "-35%";
+    document.removeEventListener("click", closeTagMenu);
+}
+
+
+function filterVideos(selectedTag) {
+    let searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    filteredVideos = videos.filter(video => {
+        let titleMatch = video.vod_name.toLowerCase().includes(searchQuery);
+        let tagMatch = selectedTag === "全部" || video.type_name.includes(selectedTag);
+        return titleMatch && tagMatch;
+    });
+
+    if (filteredVideos.length === 0) {
+        console.warn("⚠️ 未找到匹配的视频，播放所有视频");
+        filteredVideos = [...videos]; // ✅ 防止 `filteredVideos` 为空
+    }
+
+    playRandomVideo();
+}
+
+
+
+
+function generateTagMenu() {
+    let tagMenu = document.getElementById("tag-menu-list");
+    if (!tagMenu) {
+        console.error("❌ tag-menu-list 未找到，请检查 HTML 结构！");
+        return;
+    }
+
+    tagMenu.innerHTML = ""; // 清空旧标签
+    let uniqueTags = Array.from(new Set(videos.map(video => video.type_name))); // ✅ 识别 type_name 并去重
+
+    uniqueTags.unshift("全部"); // 添加“全部”选项
+
+    uniqueTags.forEach(tag => {
+        let tagElement = document.createElement("div");
+        tagElement.classList.add("tag-item");
+        tagElement.innerText = tag;
+        tagElement.onclick = () => selectTag(tag); // 绑定点击事件
+        tagMenu.appendChild(tagElement);
+    });
+}
+
+// 确保 generateTagMenu 在加载视频数据后调用
+document.addEventListener("DOMContentLoaded", () => {
+    fetch("videos/videos.json")
+        .then(response => response.json())
+        .then(data => {
+            videos = data;  // ✅ 确保 `videos` 数据加载
+            generateTagMenu();
+        })
+        .catch(error => console.error("❌ 加载 videos.json 失败", error));
+});
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", loadTags);
+
+
+const ads = [
+    { image: "https://pic.qqans.com/up/2019-3/2019030515394962246.png", link: "https://slightlyrudge.github.io/" },
+    { image: "https://pic.qqans.com/up/2019-3/2019030515394962246.png", link: "https://slightlyrudge.github.io/" },
+    { image: "https://pic.qqans.com/up/2019-3/2019030515394962246.png", link: "https://slightlyrudge.github.io/" },
+    { image: "https://pic.qqans.com/up/2019-3/2019030515394962246.png", link: "https://slightlyrudge.github.io/" },
+    { image: "https://pic.qqans.com/up/2019-3/2019030515394962246.png", link: "https://slightlyrudge.github.io/" }
+];
+
+let slideCount = 0;
+
+function onVideoSwipe() {
+    slideCount++;
+
+    if (slideCount >= Math.floor(Math.random() * 2) + 5) { // 3-4次滑动后触发广告2+3。4-5次修改2+4。5-6次修改2+5。以此类推
+        showFloatingAd();
+        slideCount = 0; // 重置计数器
+    }
+}
+
+function showFloatingAd() {
+    let ad = ads[Math.floor(Math.random() * ads.length)];
+    
+    document.getElementById("adImage").src = ad.image;
+    document.getElementById("adLink").href = ad.link;
+    document.getElementById("floatingAd").style.display = "block";
+
+    setTimeout(closeAd, 10000); // 10 秒后自动关闭
+}
+
+function closeAd() {
+    document.getElementById("floatingAd").style.display = "none";
+}
+
+// 监听滑动事件
+document.addEventListener("wheel", onVideoSwipe); // PC 端鼠标滚轮
+document.addEventListener("touchend", onVideoSwipe); // 手机端滑动
+
+
+function playVideo(video) {
+    const videoElement = document.getElementById("video-player");
+    videoElement.src = video.vod_play_url;
+    document.getElementById("video-title").textContent = video.vod_name;
+    document.getElementById("video-time").textContent = video.vod_time;
+    document.getElementById("video-category").textContent = video.type_name;
+}
+
+
+
+async function handleLogin() {
+    let username = document.getElementById("username").value.trim();
+    let password = document.getElementById("password").value.trim();
+
+    try {
+        let response = await fetch("fl/users.json"); // ✅ 确保路径正确
+        if (!response.ok) {
+            throw new Error("❌ 无法访问用户数据");
+        }
+
+        let users = await response.json();
+        let user = users.find(u => u.username === username && u.password === password);
+
+        if (user) {
+            console.log("✅ 登录成功！");
+            localStorage.setItem("isLoggedIn", "true"); // ✅ 记住登录状态
+            document.getElementById("loginContainer").style.display = "none"; // ✅ 隐藏登录界面
+            document.getElementById("contentContainer").style.display = "block"; // ✅ 现在可以看内容
+            document.body.style.overflow = "auto";
+        } else {
+            console.log("❌ 账号或密码错误");
+            document.getElementById("loginError").innerText = "❌ 账号或密码错误！";
+            document.getElementById("loginError").style.display = "block"; // ✅ 显示错误提示
+        }
+    } catch (error) {
+        console.error("❌ 无法加载用户数据：", error);
+        document.getElementById("loginError").innerText = "⚠️ 服务器错误，无法验证账号！";
+        document.getElementById("loginError").style.display = "block";
+    }
+}
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("📌 页面已加载，检查登录状态...");
+
+    // ✅ 如果 localStorage 里存了 "true"，显示网站内容
+    if (localStorage.getItem("isLoggedIn") === "true") {
+        console.log("🔓 已登录，显示网站内容");
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("contentContainer").style.display = "block"; // ✅ 现在可以看内容
+        document.body.style.overflow = "auto";
+        return;
+    }
+
+    // ❗❗ 强制让未登录用户留在登录界面
+    document.getElementById("loginContainer").style.display = "flex";
+    document.getElementById("contentContainer").style.display = "none"; // ❌ 网站内容不显示
+    document.body.style.overflow = "hidden"; // ✅ 禁止滚动，防止绕过登录
+});
+
+function logout() {
+    localStorage.removeItem("isLoggedIn"); // ✅ 清除登录状态
+    location.reload(); // ✅ 刷新页面，返回登录界面
+}
+
+
+</script>
+
+<div id="bottomBar" class="bottom-bar">
+    <input type="range" id="progressBar" value="0" min="0" max="100" step="0.1">
+    <button onclick="goHome()">🏠</button>
+    <button id="searchIcon">🔍</button>
+    <button onclick="togglePlay()">⏸️</button>
+    <button onclick="toggleSound()">🔊</button>
+    <button onclick="toggleFullscreen()">⛶</button>
+</div>
+
+
+<div id="menu" class="menu" onclick="toggleMenu(event)">
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+
+    <div class="nav" id="nav">
+        <a href="index.html">首页</a>
+        <a href="javascript:void(0);" onclick="toggleTagMenu(event)">标签</a>
+        <a href="contact.html">联系我们</a>
+        <a href="gghz.html">广告合作</a>
+        <a href="cjwt.html">常问问题</a>
+        <a href="DMCA.html">DMCA</a>
+        <a href="mzsm.html">免责声明</a>
+        <a href="yszc.html">隐私政策</a>
+        <a href="fuwutiaokuan.html">服务条款</a>
+    </div>
+
+
+<!-- 📌 右侧标签选择 UI -->
+<div id="tagMenu" class="tag-menu">
+    <h3>选择标签</h3>
+    <p>当前选中：<span id="selectedTag">全部</span></p> <!-- ✅ 显示当前选中的标签 -->
+    <div id="tag-menu-list"></div> <!-- ✅ 确保 ID 匹配 -->
+</div>
+
+ <button id="logoutBtn" onclick="logout()">退出登录</button>
+
+
+<!-- 📌 底部浮动广告 -->
+<div id="floatingAd" style="
+    display: none;
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    text-align: center;
+    z-index: 1000;
+">
+    <a id="adLink" href="#" target="_blank">
+        <img id="adImage" src="" alt="广告" style="width: 300px; height: auto;">
+    </a>
+    <button onclick="closeAd()" style="
+        display: block;
+        margin: 5px auto 0;
+        background: red;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+    ">关闭</button>
+</div>
+</html>
+    </div>
+</body>
